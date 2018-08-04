@@ -73,8 +73,6 @@ func main() {
 	defer w.Flush()
 
 	for _, entry := range res.Entries {
-		//fmt.Println(e)
-		//fmt.Printf("%T\n", e)
 		switch f := entry.(type) {
 		case *files.FileMetadata:
 			fmt.Println("download: ", f.Name)
@@ -84,7 +82,6 @@ func main() {
 			if err != nil {
 				panic(err)
 			}
-			//printFolderMetadata(w, f, long)
 			// TODO: mkdir if the download folder is not found
 			fw, err := os.Create("contents/" + res.Name)
 			if err != nil {
@@ -95,7 +92,6 @@ func main() {
 			contents.Close()
 			fw.Close()
 		case *files.FolderMetadata:
-			//fmt.Println(f.Name, "is folder")
 			w.Write([]byte(f.Name))
 		}
 	}
