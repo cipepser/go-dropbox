@@ -28,7 +28,7 @@ func main() {
 
 	config := dropbox.Config{
 		Token:    k.Token,
-		LogLevel: dropbox.LogInfo,
+		LogLevel: dropbox.LogOff,
 	}
 
 	// TODO: use oauth2 instead of access token(may be needed to use fmt.Scan to send auth code)
@@ -64,17 +64,39 @@ func main() {
 		panic(err)
 	}
 
+	fw, err := os.Create("./undownloaded.log")
+	if err != nil {
+		panic(err)
+	}
+	defer fw.Close()
+	w := bufio.NewWriter(fw)
+	defer w.Flush()
+
 	for _, entry := range res.Entries {
 		//fmt.Println(e)
 		//fmt.Printf("%T\n", e)
 		switch f := entry.(type) {
 		case *files.FileMetadata:
-			fmt.Println(f.Name, "is file")
-			//printFileMetadata(w, f, long)
-		case *files.FolderMetadata:
-			fmt.Println(f.Name, "is folder")
+			fmt.Println("download: ", f.Name)
 
+			arg := files.NewDownloadArg(p.Folder + "/" + f.Name)
+			res, contents, err := c.Download(arg)
+			if err != nil {
+				panic(err)
+			}
 			//printFolderMetadata(w, f, long)
+			// TODO: mkdir if the download folder is not found
+			fw, err := os.Create("contents/" + res.Name)
+			if err != nil {
+				panic(err)
+			}
+			io.Copy(fw, contents)
+
+			contents.Close()
+			fw.Close()
+		case *files.FolderMetadata:
+			//fmt.Println(f.Name, "is folder")
+			w.Write([]byte(f.Name))
 		}
 	}
 }
